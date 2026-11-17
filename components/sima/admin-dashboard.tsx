@@ -31,6 +31,7 @@ import { PaymentsTab } from "@/components/sima/admin-payments"
 import { AccountsTab } from "@/components/sima/admin-accounts"
 import { ReferralsTab } from "@/components/sima/admin-referrals"
 import type { AdminAccount } from "@/lib/course-access"
+import { COURSES } from "@/lib/course-catalog"
 import type { AdminReferralCode } from "@/lib/referral-types"
 import type {
   SimaAdminActionResponse,
@@ -251,7 +252,7 @@ export function SimaAdminDashboard({
           <div className="mt-9 hidden space-y-2 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 lg:block">
             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
               <span className="size-1.5 rounded-full bg-emerald-300" />
-              3 COURSES LIVE
+              {COURSES.length} COURSES LIVE
             </span>
             <p className="text-xs leading-5 text-slate-400">SIMA Abacus · {data.summary.lessonCount} lessons</p>
             <p className="text-xs leading-5 text-slate-400">
