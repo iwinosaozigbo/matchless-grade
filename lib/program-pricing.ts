@@ -9,6 +9,13 @@ export const PROGRAMS = [
     launchPriceNgn: 25_000,
   },
   {
+    id: "english",
+    name: "Grade 2 English",
+    description: "Grade 2 English, 2nd Term: six recorded lessons with practice questions and saved progress.",
+    earlyBirdPriceNgn: 20_000,
+    launchPriceNgn: 25_000,
+  },
+  {
     id: "sima-abacus",
     name: "SIMA Abacus",
     description: "SIMA Abacus learning programme.",

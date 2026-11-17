@@ -88,15 +88,28 @@ export function ProgrammesSection() {
   return (
     <section id="subjects" className="mx-auto max-w-6xl scroll-mt-24 px-4 pt-16 sm:px-6 sm:pt-24">
       <SectionHeading eyebrow="Programmes">
-        Two programmes. One goal: confidence with numbers.
+        Maths and English, taught in short lessons that build confidence.
       </SectionHeading>
-      <div className="mt-10 grid gap-5 md:grid-cols-2">
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
         <article className="rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
           <h3 className="font-display text-2xl font-bold">Mathematics: Nursery 2 to SSS3</h3>
           <p className="mt-3 leading-7 text-muted-foreground">
             The full maths curriculum from first counting to secondary school, covering fractions and algebra through
             trigonometry and statistics. Secondary lessons are built around BECE and WAEC questions.
           </p>
+        </article>
+        <article className="rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
+          <h3 className="font-display text-2xl font-bold">Grade 2 English · 2nd Term</h3>
+          <p className="mt-3 leading-7 text-muted-foreground">
+            Six short video lessons on possessive and reflexive pronouns, synonyms, gender words, the tion sound, and
+            using do and does. Lessons include practice questions and saved progress.
+          </p>
+          <Link
+            href="/login?next=%2Flearn"
+            className="mt-4 inline-block font-display text-sm font-bold text-brand underline-offset-4 hover:underline"
+          >
+            Sign in to enrol
+          </Link>
         </article>
         <article className="rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
           <h3 className="font-display text-2xl font-bold">SIMA Abacus mental maths</h3>

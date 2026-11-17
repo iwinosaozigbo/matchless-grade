@@ -16,7 +16,7 @@ export function LearnDashboard({ lessons, progress, name, liveClassLinks = [], s
   simaXp?: number
 }) {
   const stages = ["Nursery 2 & Basic 1", "Basic 2-3", "Upper Basic", "Junior Secondary", "Senior Secondary"].filter((stage) => lessons.some((lesson) => lesson.stage === stage))
-  const englishStages = ["Grade 1 English"].filter((stage) => lessons.some((lesson) => lesson.stage === stage))
+  const englishStages = [...new Set(lessons.filter((lesson) => lesson.stage.endsWith("English")).map((lesson) => lesson.stage))]
   const done = progress.filter((item) => item.completed_at).length + simaCompleted
   const xp = progress.reduce((sum, item) => sum + item.xp_awarded, 0) + simaXp
 
@@ -59,7 +59,7 @@ export function LearnDashboard({ lessons, progress, name, liveClassLinks = [], s
             {englishStages.length > 0 && (
               <CourseDrawer
                 title="English"
-                description="Sounds, words and grammar"
+                description="Grade 1 and Grade 2 reading, words and grammar"
                 icon={<span className="flex size-11 items-center justify-center rounded-2xl bg-brand/10 text-brand"><BookOpen className="size-5" aria-hidden="true" /></span>}
                 stages={englishStages}
                 lessons={lessons}

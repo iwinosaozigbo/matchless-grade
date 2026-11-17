@@ -20,14 +20,11 @@ export function SimaSignInForm({
   const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [resetMessage, setResetMessage] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [sendingReset, setSendingReset] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
-    setResetMessage("")
     setSubmitting(true)
 
     const normalizedIdentifier = identifier.trim()
@@ -67,39 +64,6 @@ export function SimaSignInForm({
 
     router.replace(nextPath)
     router.refresh()
-  }
-
-  async function handlePasswordReset() {
-    setError("")
-    setResetMessage("")
-
-    const normalizedEmail = identifier.trim().toLowerCase()
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      setError("Enter a valid account email address first.")
-      return
-    }
-
-    setSendingReset(true)
-    try {
-      const redirectTo = new URL(
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/auth/callback`,
-      )
-      redirectTo.searchParams.set("next", `/reset-password?next=${nextPath}`)
-
-      const { error: resetError } = await createClient().auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: redirectTo.toString(),
-      })
-
-      if (resetError) {
-        setError("Unable to send a reset link right now. Please wait a moment and try again.")
-      } else {
-        setResetMessage("If an account exists for this email, a password reset link has been sent.")
-      }
-    } catch {
-      setError("Unable to send a reset link right now. Please wait a moment and try again.")
-    } finally {
-      setSendingReset(false)
-    }
   }
 
   return (
@@ -152,16 +116,13 @@ export function SimaSignInForm({
               </span>
             </label>
             {error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">{error}</p>}
-            {resetMessage && <p role="status" className="rounded-xl border border-brand/20 bg-brand/5 px-3 py-2 text-sm leading-relaxed">{resetMessage}</p>}
-            <button
-              type="button"
-              onClick={handlePasswordReset}
-              disabled={sendingReset || submitting}
-              className="self-center text-sm font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-60"
+            <Link
+              href={nextPath === "/admin" ? "/forgot-password?next=%2Fadmin" : "/forgot-password?next=%2Flearn"}
+              className="self-center text-sm font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              {sendingReset ? "Sending reset link…" : "Forgot password?"}
-            </button>
-            <Button type="submit" size="lg" className="w-full rounded-full" disabled={submitting || sendingReset}>
+              Forgot password?
+            </Link>
+            <Button type="submit" size="lg" className="w-full rounded-full" disabled={submitting}>
               {submitting && <LoaderCircle data-icon="inline-start" className="animate-spin" />}
               {submitting ? "Signing in…" : "Sign in"}
             </Button>

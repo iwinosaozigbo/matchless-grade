@@ -12,18 +12,21 @@ export function LearnCourseOptions({
   mathPriceNgn,
   simaPriceNgn,
   isEarlyBird,
+  englishPriceNgn,
 }: {
   email: string
   unlockedMathStages: string[]
   hasSimaAccess: boolean
   mathPriceNgn: number
   simaPriceNgn: number
+  englishPriceNgn: number
   isEarlyBird: boolean
 }) {
   const remainingMathStages = MATH_COURSE_IDS
     .map(stageForMathCourse)
     .filter((stage) => !unlockedMathStages.includes(stage))
-  const hasOptions = remainingMathStages.length > 0 || !hasSimaAccess
+  const hasEnglishAccess = unlockedMathStages.includes("Grade 2 English")
+  const hasOptions = remainingMathStages.length > 0 || !hasSimaAccess || !hasEnglishAccess
 
   if (!hasOptions) return null
 
@@ -64,6 +67,36 @@ export function LearnCourseOptions({
                 productId="mathematics"
                 productName="Mathematics bundle"
                 amountNgn={mathPriceNgn}
+              />
+            </div>
+          </details>
+        )}
+
+        {!hasEnglishAccess && (
+          <details className="group/course rounded-[1.75rem] border-2 border-border bg-muted/30 shadow-sm">
+            <summary className="flex cursor-pointer list-none items-center gap-3 p-4 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <LockKeyhole className="size-5" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-base font-bold text-muted-foreground">Grade 2 English · 2nd Term</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">6 video lessons · reading and grammar practice</span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Monthly</span>
+                <span className="font-display text-lg font-bold text-foreground">{formatNgn(englishPriceNgn)}/month</span>
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open/course:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="border-t border-border px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
+              <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                Six short classes covering possessive pronouns, synonyms, gender words, the tion sound, reflexive pronouns, and do/does. Your lessons unlock after Flutterwave confirms payment.
+              </p>
+              <ProgramPurchaseButton
+                email={email}
+                productId="english"
+                productName="Grade 2 English"
+                amountNgn={englishPriceNgn}
               />
             </div>
           </details>

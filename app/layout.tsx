@@ -8,7 +8,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Matchless Grade — Your learning dashboard',
   description:
-    'Access your purchased mathematics levels and SIMA Abacus lessons, track progress, and unlock more courses from one learning dashboard.',
+    'Access your purchased mathematics and English courses and SIMA Abacus lessons, track progress, and unlock more courses from one learning dashboard.',
   generator: 'v0.app',
   icons: {
     icon: '/icon.svg',
