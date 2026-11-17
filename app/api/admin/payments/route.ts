@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { getSimaAdminAccess } from "@/lib/sima/admin"
 import { verifyFlutterwaveTransaction } from "@/lib/sima/payments"
 import { getProgram, isProgramId } from "@/lib/program-pricing"
+import { nextPeriodEnd } from "@/lib/subscription"
 import { createServiceClient } from "@/lib/supabase/server"
 
 function hasSameOrigin(request: NextRequest) {
@@ -74,6 +75,8 @@ export async function PATCH(request: NextRequest) {
       payment_status: tx.status,
       paid_at: tx.created_at,
       assigned_by: actor.id,
+      subscription_status: "active",
+      current_period_end: nextPeriodEnd(tx.created_at),
       updated_at: now,
     },
     { onConflict: "flutterwave_transaction_id" },

@@ -191,7 +191,7 @@ export const ENGLISH_LEVELS: MathLevel[] = [
   {
     id: "grade-1-english",
     stage: "Grade 1 English",
-    grades: "Grade 1 · 1st Term",
+    grades: "Grade 1 (Basic 1) · 1st Term",
     tagline: "Sounds, letters, words and first grammar for young readers.",
     color: "mint",
     subject: "english",
@@ -224,7 +224,7 @@ export const ENGLISH_LEVELS: MathLevel[] = [
   {
     id: "grade-2-english",
     stage: "Grade 2 English",
-    grades: "Grade 2 · 2nd Term",
+    grades: "Grade 2 (Basic 2) · 2nd Term",
     tagline: "Build confident reading and grammar with six short, focused lessons.",
     color: "brand",
     subject: "english",

@@ -1,7 +1,6 @@
 import Link from "next/link"
 import {
   ArrowRight,
-  BookOpenText,
   Building2,
   CalendarCheck,
   ChartNoAxesColumn,
@@ -13,7 +12,6 @@ import {
   PencilLine,
 } from "lucide-react"
 import { RESULTS, TESTIMONIALS } from "@/lib/home-content"
-import { formatNgn, getProgram, getProgramPriceNgn } from "@/lib/program-pricing"
 
 function SectionHeading({ children, eyebrow }: { children: React.ReactNode; eyebrow?: string }) {
   return (
@@ -100,17 +98,24 @@ export function ProgrammesSection() {
             The full maths curriculum from first counting to secondary school, covering fractions and algebra through
             trigonometry and statistics. Secondary lessons are built around BECE and WAEC questions.
           </p>
-        </article>
-        <article className="rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
-          <h3 className="font-display text-2xl font-bold">English classes for primary learners</h3>
-          <p className="mt-3 leading-7 text-muted-foreground">
-            Choose a class for Basic 1 or Basic 2 &amp; 3, with a separate Grade 2 course also available to returning learners.
-          </p>
           <Link
-            href="#english-classes"
+            href="#pricing"
             className="mt-4 inline-flex items-center gap-2 font-display text-sm font-bold text-brand underline-offset-4 hover:underline"
           >
-            Explore English classes <ArrowRight className="size-4" aria-hidden="true" />
+            See Maths bundle <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </article>
+        <article className="rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
+          <h3 className="font-display text-2xl font-bold">English bundle: Primary reading &amp; grammar</h3>
+          <p className="mt-3 leading-7 text-muted-foreground">
+            One English bundle covering Grade 1 (Basic 1) and Grade 2 (Basic 2): phonics, letter sounds, reading, and
+            essential grammar with short practice quizzes and saved progress.
+          </p>
+          <Link
+            href="#pricing"
+            className="mt-4 inline-flex items-center gap-2 font-display text-sm font-bold text-brand underline-offset-4 hover:underline"
+          >
+            See English bundle <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </article>
         <article className="rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
@@ -121,48 +126,11 @@ export function ProgrammesSection() {
           </p>
           <Link
             href="/sima-abacus"
-            className="mt-4 inline-block font-display text-sm font-bold text-brand underline-offset-4 hover:underline"
+            className="mt-4 inline-flex items-center gap-2 font-display text-sm font-bold text-brand underline-offset-4 hover:underline"
           >
-            Learn about SIMA Abacus
+            Learn about SIMA Abacus <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </article>
-      </div>
-    </section>
-  )
-}
-
-const ENGLISH_CLASS_PROGRAMS = ["english-basic-1", "english-basic-2-3"] as const
-
-export function EnglishClassesSection() {
-  const now = Date.now()
-
-  return (
-    <section id="english-classes" className="mx-auto max-w-6xl scroll-mt-24 px-4 pt-16 sm:px-6 sm:pt-24">
-      <SectionHeading eyebrow="English classes">A clear class path for growing readers.</SectionHeading>
-      <p className="mx-auto mt-4 max-w-2xl text-center text-pretty leading-7 text-muted-foreground">
-        Register your learner for English Basic 1 or Basic 2 &amp; 3. The learner registration form captures their class and guardian details, and enrolment is billed monthly.
-      </p>
-      <div className="mt-9 grid gap-5 md:grid-cols-2">
-        {ENGLISH_CLASS_PROGRAMS.map((programId) => {
-          const program = getProgram(programId)!
-          const price = getProgramPriceNgn(program, now)
-          return (
-            <article key={program.id} className="flex flex-col rounded-[2rem] border-2 border-border bg-card p-7 shadow-soft">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                <BookOpenText className="size-6" aria-hidden="true" />
-              </span>
-              <h3 className="mt-4 font-display text-2xl font-bold">{program.name}</h3>
-              <p className="mt-2 leading-7 text-muted-foreground">{program.description} Lessons will appear in the learner&apos;s Learn dashboard as they are published.</p>
-              <p className="mt-5 font-sans text-3xl font-bold">{formatNgn(price)}<span className="ml-2 text-sm font-semibold text-muted-foreground">/month</span></p>
-              <Link
-                href={`/signup?product=${program.id}`}
-                className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-sun px-5 py-3 font-display text-sm font-bold text-sun-foreground shadow-toy-sun transition-transform hover:-translate-y-0.5"
-              >
-                Register learner <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-            </article>
-          )
-        })}
       </div>
     </section>
   )

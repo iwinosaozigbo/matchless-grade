@@ -37,7 +37,9 @@ export function ProgramPurchaseButton({
   amountNgn: number
 }) {
   const router = useRouter()
-  const [scriptReady, setScriptReady] = useState(false)
+  const [scriptReady, setScriptReady] = useState(
+    () => typeof window !== "undefined" && Boolean(window.FlutterwaveCheckout),
+  )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
 
@@ -71,8 +73,13 @@ export function ProgramPurchaseButton({
   async function startCheckout() {
     setError("")
     const publicKey = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY?.trim()
-    if (!publicKey || !window.FlutterwaveCheckout) {
-      setError("Secure checkout is not available right now. Please try again later.")
+    const checkoutFn = window.FlutterwaveCheckout
+    if (!publicKey || !checkoutFn) {
+      setError(
+        scriptReady
+          ? "Secure checkout is not available right now. Please try again later."
+          : "Secure checkout is still loading. Wait a moment and try again.",
+      )
       return
     }
 
@@ -89,7 +96,7 @@ export function ProgramPurchaseButton({
       return
     }
 
-    window.FlutterwaveCheckout({
+    checkoutFn({
       public_key: publicKey,
       tx_ref: txRef,
       amount: plan.amountNgn,
@@ -121,7 +128,7 @@ export function ProgramPurchaseButton({
       <button
         type="button"
         onClick={startCheckout}
-        disabled={busy || !scriptReady}
+        disabled={busy}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-3 font-display font-bold text-brand-foreground transition-transform hover:-translate-y-0.5 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy ? <LoaderCircle className="size-5 animate-spin" aria-hidden="true" /> : <ArrowRight className="size-5" aria-hidden="true" />}

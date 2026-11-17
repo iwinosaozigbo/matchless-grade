@@ -26,15 +26,27 @@ export async function POST(req: Request) {
   }
 
   const supabase = createServiceClient()
+  const firstName = text(body.firstName)
+  const lastName = text(body.lastName)
+  const fullName = `${firstName} ${lastName}`.trim()
+  const productId = typeof body.productId === "string" ? body.productId.trim().slice(0, 64) : "sima-abacus"
+
   const { error } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: {
-      first_name: text(body.firstName),
-      last_name: text(body.lastName),
+      ...(fullName ? { full_name: fullName } : {}),
+      first_name: firstName,
+      last_name: lastName,
       username: text(body.username),
-      product_id: "sima-abacus",
+      phone: text(body.phone),
+      age_group: text(body.ageGroup),
+      grade_level: text(body.gradeLevel),
+      school: text(body.school),
+      guardian_name: text(body.guardianName),
+      guardian_phone: text(body.guardianPhone),
+      product_id: productId || "sima-abacus",
     },
   })
 

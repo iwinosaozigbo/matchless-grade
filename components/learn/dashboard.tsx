@@ -1,28 +1,39 @@
 import Image from "next/image"
-import { BookOpen, ChevronDown, GraduationCap, Sparkles } from "lucide-react"
+import { BookOpen, BookOpenCheck, ChevronDown, GraduationCap, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CourseSchedule } from "@/components/learn/course-schedule"
+import { SimaCourseDashboard, type SimaCourseLesson, type SimaCourseProgress } from "@/components/sima/course-dashboard"
 import type { MathCourseLesson, MathLiveClassLink } from "@/lib/math-lessons"
-import type { SimaCourseProgress } from "@/components/sima/course-dashboard"
 
-export function LearnDashboard({ lessons, progress, name, unlockedStages = [], liveClassLinks = [], simaCompleted = 0, simaLessonCount = 0, simaXp = 0 }: {
+export function LearnDashboard({
+  lessons,
+  progress,
+  name,
+  unlockedStages = [],
+  liveClassLinks = [],
+  hasSimaAccess = false,
+  simaLessons = [],
+  simaProgress = [],
+}: {
   lessons: MathCourseLesson[]
   progress: SimaCourseProgress[]
   name: string
   unlockedStages?: string[]
   liveClassLinks?: MathLiveClassLink[]
-  simaCompleted?: number
-  simaLessonCount?: number
-  simaXp?: number
+  hasSimaAccess?: boolean
+  simaLessons?: SimaCourseLesson[]
+  simaProgress?: SimaCourseProgress[]
 }) {
   const stages = ["Nursery 2 & Basic 1", "Basic 2-3", "Upper Basic", "Junior Secondary", "Senior Secondary"].filter((stage) => lessons.some((lesson) => lesson.stage === stage))
-  const englishStages = [...new Set([
-    ...lessons.filter((lesson) => lesson.stage.endsWith("English")).map((lesson) => lesson.stage),
-    ...unlockedStages.filter((stage) => stage.endsWith("English")),
-  ])]
+  const englishStages = ["Grade 1 English", "Grade 2 English"].filter((stage) =>
+    lessons.some((lesson) => lesson.stage === stage) || unlockedStages.includes(stage),
+  )
+  const simaCompleted = simaProgress.filter((item) => item.completed_at).length
+  const simaXp = simaProgress.reduce((sum, item) => sum + item.xp_awarded, 0)
   const done = progress.filter((item) => item.completed_at).length + simaCompleted
   const xp = progress.reduce((sum, item) => sum + item.xp_awarded, 0) + simaXp
+  const hasAnyCourse = stages.length > 0 || englishStages.length > 0 || hasSimaAccess
 
   return (
     <div className="flex flex-col gap-7">
@@ -34,16 +45,19 @@ export function LearnDashboard({ lessons, progress, name, unlockedStages = [], l
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <Badge variant="outline" className="rounded-full px-3 py-1.5">{xp} earned XP</Badge>
-          <Badge variant="outline" className="rounded-full px-3 py-1.5">{done} / {lessons.length + simaLessonCount} lessons complete</Badge>
+          <Badge variant="outline" className="rounded-full px-3 py-1.5">{done} / {lessons.length + simaLessons.length} lessons complete</Badge>
         </CardContent>
       </Card>
 
       <section aria-labelledby="learning-path-title" className="flex flex-col gap-4">
         <h2 id="learning-path-title" className="font-display text-2xl font-bold">Your learning path</h2>
-        {stages.length === 0 && englishStages.length === 0 ? (
+        {!hasAnyCourse ? (
           <Card className="rounded-3xl border-2">
-            <CardHeader><CardTitle className="flex items-center gap-2"><GraduationCap className="size-5 text-brand" aria-hidden="true" /> Mathematics</CardTitle><CardDescription>No Mathematics levels are assigned to your account yet.</CardDescription></CardHeader>
-            <CardContent><p className="text-sm text-muted-foreground">Use the course options below or ask your administrator to assign a level.</p></CardContent>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><GraduationCap className="size-5 text-brand" aria-hidden="true" /> Your courses</CardTitle>
+              <CardDescription>No courses are unlocked on your account yet.</CardDescription>
+            </CardHeader>
+            <CardContent><p className="text-sm text-muted-foreground">Open one of the course bundles below to subscribe, or ask your administrator to assign access.</p></CardContent>
           </Card>
         ) : (
           <div className="flex flex-col gap-4">
@@ -63,7 +77,7 @@ export function LearnDashboard({ lessons, progress, name, unlockedStages = [], l
             {englishStages.length > 0 && (
               <CourseDrawer
                 title="English"
-                description="Basic 1, Basic 2 & 3, and Grade 1–2 reading and grammar"
+                description="Grade 1 (Basic 1) & Grade 2 (Basic 2) reading and grammar"
                 icon={<span className="flex size-11 items-center justify-center rounded-2xl bg-brand/10 text-brand"><BookOpen className="size-5" aria-hidden="true" /></span>}
                 stages={englishStages}
                 lessons={lessons}
@@ -72,6 +86,24 @@ export function LearnDashboard({ lessons, progress, name, unlockedStages = [], l
                 liveClassLinks={liveClassLinks}
                 defaultOpen={stages.length === 0}
               />
+            )}
+            {hasSimaAccess && (
+              <details open={stages.length === 0 && englishStages.length === 0} className="group/sima rounded-[2rem] border-2 border-border bg-card p-5 shadow-toy sm:p-6">
+                <summary className="flex cursor-pointer list-none items-center gap-3 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+                    <BookOpenCheck className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-lg font-bold">SIMA Abacus · Basic 1</span>
+                    <span className="block text-sm text-muted-foreground">{simaLessons.length} lessons · your saved progress</span>
+                  </span>
+                  <Badge variant="secondary" className="rounded-full">Unlocked</Badge>
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open/sima:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="mt-5 border-t border-border pt-5">
+                  <SimaCourseDashboard lessons={simaLessons} progress={simaProgress} />
+                </div>
+              </details>
             )}
           </div>
         )}

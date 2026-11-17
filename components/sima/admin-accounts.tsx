@@ -177,16 +177,13 @@ export function AccountsTab({ accounts, adminEmail }: { accounts: AdminAccount[]
                   </td>
                   {COURSES.map((course) => {
                     const granted = account.courses[course.id]
-                    const paidEnglish =
-                      (course.id === "english-grade-2" && account.paidEnglishGrade2) ||
-                      (course.id === "english-basic-1" && account.paidEnglishBasic1) ||
-                      (course.id === "english-basic-2-3" && account.paidEnglishBasic23)
+                    const paidEnglish = course.group === "English" && account.paidEnglishBundle
                     const locked = account.isAdmin || (course.group === "Mathematics" && account.paidMathBundle) || paidEnglish
                     const key = `${account.email}:${course.id}`
                     const note = account.isAdmin
                       ? "Admin"
                       : paidEnglish
-                        ? "Paid English plan"
+                        ? "Paid English bundle"
                         : course.group === "Mathematics" && account.paidMathBundle
                           ? "Paid maths bundle"
                           : course.id === "sima-abacus" && account.paidSima

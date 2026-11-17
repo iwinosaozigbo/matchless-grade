@@ -22,7 +22,7 @@ export const RESULTS: ResultsStrip | null = null
 export const FAQS = [
   {
     q: "Which classes do you cover?",
-    a: "Nursery 2 to SSS3 mathematics, English classes for Basic 1 and Basic 2–3, Grade 2 English, and SIMA Abacus.",
+    a: "Nursery 2 to SSS3 mathematics, our bundled Primary English programme (Grade 1 / Basic 1 and Grade 2 / Basic 2), and SIMA Abacus.",
   },
   {
     q: "Does it work on a phone?",

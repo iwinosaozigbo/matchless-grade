@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 
 export function SimaResetPasswordForm({ nextPath }: { nextPath: "/admin" | "/learn" }) {
   const router = useRouter()
+  const minLength = nextPath === "/admin" ? 12 : 8
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
@@ -18,8 +19,8 @@ export function SimaResetPasswordForm({ nextPath }: { nextPath: "/admin" | "/lea
     event.preventDefault()
     setError("")
 
-    if (password.length < 12) {
-      setError("Choose a password with at least 12 characters.")
+    if (password.length < minLength) {
+      setError(`Choose a password with at least ${minLength} characters.`)
       return
     }
 
@@ -51,7 +52,7 @@ export function SimaResetPasswordForm({ nextPath }: { nextPath: "/admin" | "/lea
       <Card className="w-full max-w-md rounded-[2rem] border-2 border-brand/15 shadow-soft">
         <CardHeader className="gap-2 text-center">
           <CardTitle className="font-display text-3xl">Set a new password</CardTitle>
-          <CardDescription>Use at least 12 characters and keep it unique to this account.</CardDescription>
+          <CardDescription>Use at least {minLength} characters and keep it unique to this account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -63,7 +64,7 @@ export function SimaResetPasswordForm({ nextPath }: { nextPath: "/admin" | "/lea
                   type="password"
                   autoComplete="new-password"
                   required
-                  minLength={12}
+                  minLength={minLength}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   className="w-full bg-transparent outline-none"
@@ -79,7 +80,7 @@ export function SimaResetPasswordForm({ nextPath }: { nextPath: "/admin" | "/lea
                   type="password"
                   autoComplete="new-password"
                   required
-                  minLength={12}
+                  minLength={minLength}
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   className="w-full bg-transparent outline-none"

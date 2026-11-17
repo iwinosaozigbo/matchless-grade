@@ -36,13 +36,18 @@ export function SiteNav() {
             FAQ
           </Link>
           <Link href="/learn" className="font-bold text-brand transition-colors hover:text-foreground">
-            SIMA Abacus
+            Learn
           </Link>
         </div>
 
-        <PillLink href="/login" variant="sun" size="sm">
-          Sign in
-        </PillLink>
+        <div className="flex items-center gap-3">
+          <Link href="/learn" className="text-sm font-bold text-brand transition-colors hover:text-foreground md:hidden">
+            Learn
+          </Link>
+          <PillLink href="/login" variant="sun" size="sm">
+            Sign in
+          </PillLink>
+        </div>
       </nav>
     </header>
   )

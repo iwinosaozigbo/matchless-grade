@@ -55,7 +55,16 @@ export async function getProgramForPlan(planId: string | number) {
   if (!response.ok || body?.status !== "success" || !plan) return null
   if (plan.interval !== "monthly" || plan.currency !== "NGN") return null
 
-  const program = PROGRAMS.find((item) => plan.name.startsWith(`${item.name} monthly subscription`))
+  const legacyEnglishPrefixes = [
+    "Grade 2 English monthly subscription",
+    "English · Basic 1 monthly subscription",
+    "English · Basic 2 & 3 monthly subscription",
+  ]
+  const program =
+    PROGRAMS.find((item) => plan.name.startsWith(`${item.name} monthly subscription`)) ??
+    (legacyEnglishPrefixes.some((prefix) => plan.name.startsWith(prefix))
+      ? getProgram("english")
+      : undefined)
   if (!program) return null
   return { programId: program.id as ProgramId, amountNgn: Number(plan.amount) }
 }

@@ -32,7 +32,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "This lesson is not available yet." }, { status: 404 })
   }
   const stages = await getUnlockedMathStages(user.email)
-  if (!stages.includes(lesson.stage)) return NextResponse.json({ error: "This Mathematics level is not assigned to your account." }, { status: 403 })
+  const subjectLabel = lesson.stage.endsWith("English") ? "English" : "Mathematics"
+  if (!stages.includes(lesson.stage)) return NextResponse.json({ error: `This ${subjectLabel} level is not assigned to your account.` }, { status: 403 })
 
   const questions = readMathQuiz(lesson.quiz_questions)
   const answers = body.answers

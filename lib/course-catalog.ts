@@ -7,8 +7,6 @@ export const COURSES = [
   { id: "math-senior-secondary", name: "Senior Secondary", group: "Mathematics", stage: "Senior Secondary" },
   { id: "english-grade-1", name: "Grade 1 English", group: "English", stage: "Grade 1 English" },
   { id: "english-grade-2", name: "Grade 2 English", group: "English", stage: "Grade 2 English" },
-  { id: "english-basic-1", name: "English · Basic 1", group: "English", stage: "Basic 1 English" },
-  { id: "english-basic-2-3", name: "English · Basic 2 & 3", group: "English", stage: "Basic 2 & 3 English" },
 ] as const
 
 export type CourseId = (typeof COURSES)[number]["id"]
@@ -27,8 +25,6 @@ export const MATH_COURSE_IDS: MathCourseId[] = [
 export const ENGLISH_COURSE_IDS: LessonCourseId[] = [
   "english-grade-1",
   "english-grade-2",
-  "english-basic-1",
-  "english-basic-2-3",
 ]
 
 export function isCourseId(value: unknown): value is CourseId {

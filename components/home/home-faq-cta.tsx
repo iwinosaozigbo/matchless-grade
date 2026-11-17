@@ -73,6 +73,7 @@ const FOOTER_COLUMNS: { heading: string; links: { label: string; href: string }[
   {
     heading: "Learn",
     links: [
+      { label: "My courses", href: "/learn" },
       { label: "Free maths test", href: FREE_TEST_HREF },
       { label: "Pricing", href: "/pricing" },
       { label: "SIMA Abacus", href: "/sima-abacus" },
@@ -112,7 +113,7 @@ export function SiteFooter() {
               </span>
             </Link>
             <p className="mt-4 text-pretty text-sm leading-6 text-ink-foreground/70">
-              Game-based maths lessons from Nursery to SSS3, plus SIMA Abacus mental maths. Monthly plans, cancel any time.
+              Game-based maths from Nursery to SSS3, bundled Primary English classes, and SIMA Abacus mental maths. Monthly plans, cancel any time.
             </p>
             {chat && (
               <a

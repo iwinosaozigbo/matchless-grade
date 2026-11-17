@@ -57,7 +57,7 @@ const tabs: { id: SimaAdminTab; label: string; icon: typeof LayoutDashboard; gro
 
 const groups: Record<TabGroup, { label: string; eyebrow: string; courseHref?: string }> = {
   sima: { label: "SIMA Abacus", eyebrow: "SIMA ABACUS · BASIC 1", courseHref: "/learn" },
-  math: { label: "Mathematics", eyebrow: "MATHEMATICS · UPPER BASIC, JUNIOR & SENIOR SECONDARY", courseHref: "/learn" },
+  math: { label: "Maths & English", eyebrow: "MATHEMATICS & ENGLISH · RECORDED LESSONS", courseHref: "/learn" },
   workspace: { label: "Workspace", eyebrow: "ALL COURSES" },
 }
 
@@ -241,7 +241,7 @@ export function SimaAdminDashboard({
                       }`}
                     >
                       <Icon className="size-4" aria-hidden="true" />
-                      <span className="lg:hidden">{group === "math" && id !== "liveClasses" ? "Mathematics" : label}</span>
+                      <span className="lg:hidden">{group === "math" && id !== "liveClasses" ? "Maths & English" : label}</span>
                       <span className="hidden lg:inline">{label}</span>
                     </button>
                   ))}
@@ -256,7 +256,7 @@ export function SimaAdminDashboard({
             </span>
             <p className="text-xs leading-5 text-slate-400">SIMA Abacus · {data.summary.lessonCount} lessons</p>
             <p className="text-xs leading-5 text-slate-400">
-              Mathematics · {mathLevels.reduce((sum, level) => sum + (level.playlist?.videos.length ?? level.videos?.length ?? 0), 0)} lessons
+              Maths &amp; English · {mathLevels.reduce((sum, level) => sum + (level.playlist?.videos.length ?? level.videos?.length ?? 0), 0)} lessons
             </p>
           </div>
 
@@ -271,7 +271,7 @@ export function SimaAdminDashboard({
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">{activeGroup.eyebrow}</p>
               <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-white sm:text-[28px]">
-                {activeTab === "liveClasses" ? "Weekly live-class links" : activeTabInfo?.group === "math" ? "Mathematics lessons" : activeTabInfo?.label}
+                {activeTab === "liveClasses" ? "Weekly live-class links" : activeTabInfo?.group === "math" ? "Mathematics & English lessons" : activeTabInfo?.label}
               </h1>
             </div>
             {activeGroup.courseHref && (

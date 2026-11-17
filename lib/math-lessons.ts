@@ -21,7 +21,7 @@ export async function getMathCourse({ userId, isAdmin, stages }: { userId: strin
     service.from("math_course_progress").select("lesson_id, best_score, xp_awarded, attempts, completed_at").eq("user_id", userId),
   ])
   if (lessonResult.error || progressResult.error) throw new Error("Unable to load Mathematics course progress.")
-  const lessons = (lessonResult.data ?? []).map((lesson) => ({ ...lesson, unlocked: Date.parse(lesson.release_at) <= Date.now() })) as MathCourseLesson[]
+  const lessons = (lessonResult.data ?? []).map((lesson) => ({ ...lesson, unlocked: isAdmin || Date.parse(lesson.release_at) <= Date.now() })) as MathCourseLesson[]
   const lessonIds = new Set(lessons.map((lesson) => lesson.id))
   return { lessons, progress: (progressResult.data ?? []).filter((item) => lessonIds.has(item.lesson_id)) as SimaCourseProgress[] }
 }

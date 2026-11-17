@@ -14,7 +14,7 @@ export function SimaSignInForm({
   nextPath,
 }: {
   paymentConfirmed: boolean
-  nextPath: "/admin" | "/learn" | "/learn?purchase=sima-abacus"
+  nextPath: string
 }) {
   const router = useRouter()
   const [identifier, setIdentifier] = useState("")

@@ -21,14 +21,17 @@ export function SimaLessonView({
   lesson,
   questions,
   course = "sima-abacus",
+  subjectLabel,
   progress,
 }: {
   lesson: SimaLessonViewData
   questions: PublicSimaQuizQuestion[]
   course?: "sima-abacus" | "math"
+  subjectLabel?: string
   progress?: SimaCourseProgress
 }) {
   const embedUrl = getYouTubeEmbedUrl(lesson.video_url)
+  const label = subjectLabel ?? (course === "math" ? "Mathematics" : "SIMA Abacus")
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-7">
@@ -40,7 +43,7 @@ export function SimaLessonView({
       </div>
 
       <section className="flex flex-col gap-3">
-        <Badge variant="secondary" className="w-fit rounded-full">{course === "math" ? "MATHEMATICS" : "SIMA ABACUS"} · WEEK {lesson.week_number} · VIDEO {lesson.lesson_number}</Badge>
+        <Badge variant="secondary" className="w-fit rounded-full">{label.toUpperCase()} · WEEK {lesson.week_number} · VIDEO {lesson.lesson_number}</Badge>
         {progress && <p className="text-sm font-semibold text-muted-foreground">{progress.completed_at ? "Complete" : "In progress"} · Best quiz score {progress.best_score}% · {progress.xp_awarded} XP saved</p>}
         <h1 className="font-display text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
         <p className="max-w-3xl leading-relaxed text-muted-foreground">{lesson.summary}</p>
@@ -56,7 +59,7 @@ export function SimaLessonView({
             <div className="aspect-video overflow-hidden rounded-2xl bg-ink">
               <iframe
                 src={embedUrl}
-                title={`${lesson.title} — ${course === "math" ? "Mathematics" : "SIMA Abacus"} lesson video`}
+                title={`${lesson.title} — ${label} lesson video`}
                 className="size-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"

@@ -65,5 +65,20 @@ export async function getSimaPurchase(user: Pick<User, "id" | "email">) {
     .maybeSingle()
 
   if (byEmail.error) throw new Error("Unable to check SIMA course access.")
-  return byEmail.data
+  if (byEmail.data) return byEmail.data
+
+  const enrollment = await serviceClient
+    .from("program_enrollments")
+    .select("id, amount_ngn, paid_at")
+    .eq("email", normalizedEmail)
+    .eq("program_id", "sima-abacus")
+    .eq("payment_status", "successful")
+    .or(activePeriodFilter())
+    .limit(1)
+    .maybeSingle()
+
+  if (enrollment.error) throw new Error("Unable to check SIMA course access.")
+  return enrollment.data
+    ? { id: enrollment.data.id, amount_ngn: enrollment.data.amount_ngn, verified_at: enrollment.data.paid_at }
+    : null
 }

@@ -43,6 +43,8 @@ export default async function LessonPage({ params }: { params: Promise<{ subject
   if (subjectId !== "math") notFound()
   const lesson = await getMathLesson(lessonId)
   if (!lesson || (!isAdmin && !lesson.is_published)) notFound()
+  const isEnglish = lesson.stage.endsWith("English")
+  const subjectLabel = isEnglish ? "English" : "Mathematics"
   const unlockedStages = await getUnlockedMathStages(member.email)
   const hasAccess = unlockedStages.includes(lesson.stage)
   const released = isAdmin || Date.parse(lesson.release_at) <= Date.now()
@@ -53,8 +55,18 @@ export default async function LessonPage({ params }: { params: Promise<{ subject
         <section className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-[2rem] border-2 border-border bg-card p-8 text-center shadow-toy">
           <span className="flex size-12 items-center justify-center rounded-2xl bg-secondary"><Lock className="size-5" aria-hidden="true" /></span>
           <h1 className="font-display text-2xl font-bold">{hasAccess ? `Week ${lesson.week_number} is scheduled` : `${lesson.stage} is locked`}</h1>
-          <p className="text-muted-foreground">{hasAccess ? `This video opens on ${releaseDate} at 12:00 AM Lagos time. Earlier weeks remain available.` : "Your account does not include this Mathematics level yet."}</p>
-          <Link href="/learn" className="font-bold text-brand underline-offset-4 hover:underline">Back to my lessons</Link>
+          <p className="text-muted-foreground">{hasAccess ? `This video opens on ${releaseDate} at 12:00 AM Lagos time. Earlier weeks remain available.` : `Your account does not include this ${subjectLabel} level yet.`}</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {!hasAccess && (
+              <Link
+                href={`/learn?purchase=${isEnglish ? "english" : "mathematics"}`}
+                className="rounded-full bg-sun px-4 py-2 font-display text-sm font-bold text-sun-foreground shadow-toy-sun"
+              >
+                Unlock {subjectLabel} bundle
+              </Link>
+            )}
+            <Link href="/learn" className="font-bold text-brand underline-offset-4 hover:underline">Back to my lessons</Link>
+          </div>
         </section>
       </AppShell>
     )

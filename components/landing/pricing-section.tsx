@@ -26,7 +26,7 @@ export function PricingSection() {
       </Reveal>
 
       <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {PROGRAMS.filter((product) => product.id !== "english-basic-1" && product.id !== "english-basic-2-3").map((product, index) => {
+        {PROGRAMS.map((product, index) => {
           const price = getProgramPriceNgn(product, now)
           return (
             <Reveal key={product.id} delay={index * 80}>
@@ -55,10 +55,10 @@ export function PricingSection() {
                   </p>
                 )}
                 <Link
-                  href={product.id === "sima-abacus" ? "/sima-abacus" : product.id === "english" ? "/login?next=%2Flearn" : `/signup?product=${product.id}`}
+                  href={product.id === "sima-abacus" ? "/sima-abacus" : `/signup?product=${product.id}`}
                   className="mt-auto flex items-center justify-center gap-2 rounded-full bg-sun px-4 py-3.5 font-display text-sm font-bold text-sun-foreground shadow-toy-sun transition-transform hover:-translate-y-0.5"
                 >
-                  {product.id === "english" ? "Sign in to enroll" : `Choose ${product.name}`}
+                  Choose {product.name}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </article>

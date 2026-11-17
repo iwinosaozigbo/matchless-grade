@@ -99,37 +99,50 @@ export default function SignupPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [scriptReady, setScriptReady] = useState(false)
+  const [scriptReady, setScriptReady] = useState(
+    () => typeof window !== "undefined" && Boolean(window.FlutterwaveCheckout),
+  )
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null)
   const [now, setNow] = useState(() => Date.now())
 
-  // Tick every second so the countdown stays live and price flips at launch.
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000)
     const params = new URLSearchParams(window.location.search)
     const requestedProduct = params.get("product")
     const requestedReferral = params.get("ref")?.trim().toUpperCase().slice(0, 32) ?? ""
-    if (requestedProduct === "english") {
-      router.replace("/login?next=%2Flearn")
-    } else if (isProgramId(requestedProduct)) {
+    if (isProgramId(requestedProduct)) {
       setForm((current) => ({ ...current, productId: requestedProduct }))
     }
     if (requestedReferral) {
       setForm((current) => ({ ...current, referralCode: requestedReferral }))
     }
+    if (window.FlutterwaveCheckout) {
+      setScriptReady(true)
+    }
+
+    const supabase = createSupabaseClient()
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) {
+        setSignedInEmail(data.user.email)
+      }
+    })
+
+    if (!isEarlyBird()) return
+    // Tick every second during early bird so the countdown stays live and price flips at launch.
+    const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
 
   const earlyBird = isEarlyBird(now)
   const selectedProduct = getProgram(form.productId)!
   const priceNgn = getProgramPriceNgn(selectedProduct, now)
-  const isOneTime = form.productId === "sima-abacus"
+  const isSima = form.productId === "sima-abacus"
   const { data: simaPrice } = useSWR<LocalizedSimaPriceData>(
-    isOneTime ? `/api/sima-abacus/quote?amountNgn=${priceNgn}` : null,
+    isSima ? `/api/sima-abacus/quote?amountNgn=${priceNgn}` : null,
     fetchSimaPrice,
     { revalidateOnFocus: false },
   )
   function formatProgramPrice(amountNgn: number) {
-    if (!isOneTime || !simaPrice || simaPrice.amountNgn !== priceNgn) return formatNgn(amountNgn)
+    if (!isSima || !simaPrice || simaPrice.amountNgn !== priceNgn) return formatNgn(amountNgn)
     if (simaPrice.currency === "NGN") return simaPrice.formatted
     const rate = simaPrice.amount / simaPrice.amountNgn
     if (!Number.isFinite(rate) || rate <= 0) return formatNgn(amountNgn)
@@ -219,7 +232,7 @@ export default function SignupPage() {
     }
   }
 
-  async function prepareSimaAccount() {
+  async function prepareAccount() {
     const supabase = createSupabaseClient()
     const email = form.email.trim().toLowerCase()
     const { data: currentData } = await supabase.auth.getUser()
@@ -236,6 +249,13 @@ export default function SignupPage() {
         firstName: form.firstName,
         lastName: form.lastName,
         username: form.username,
+        phone: form.phone,
+        ageGroup: form.ageGroup,
+        gradeLevel: form.gradeLevel,
+        school: form.school,
+        guardianName: form.guardianName,
+        guardianPhone: form.guardianPhone,
+        productId: form.productId,
       }),
     })
     const result = (await res.json().catch(() => ({}))) as { exists?: boolean; error?: string }
@@ -248,7 +268,7 @@ export default function SignupPage() {
     if (signInError || !signInData.session) {
       throw new Error(
         result.exists
-          ? "This email already has an account. Sign in to SIMA Abacus with your existing password, or use another email."
+          ? "This email already has an account. Sign in with your existing password, or use another email."
           : "Your account was created but we couldn't sign you in. Please sign in to continue.",
       )
     }
@@ -265,17 +285,15 @@ export default function SignupPage() {
           tx_ref,
           productId: form.productId,
           email: form.email.trim().toLowerCase(),
+          purchaseSource: "learn",
           referralCode: form.referralCode.trim() || undefined,
         }),
       })
       const data = await res.json()
       if (data.verified) {
-        if (form.productId === "sima-abacus") {
-          router.push("/learn?payment=confirmed")
-          return
-        }
         completeSignup(buildProfile())
-        router.push("/learn")
+        router.push("/learn?payment=confirmed")
+        router.refresh()
       } else {
         setError(data.error || "We couldn't confirm your payment. Please contact support.")
         setLoading(false)
@@ -305,6 +323,13 @@ export default function SignupPage() {
     }
   }
 
+  async function handleSignOutExisting() {
+    const supabase = createSupabaseClient()
+    await supabase.auth.signOut({ scope: "local" })
+    setSignedInEmail(null)
+    router.refresh()
+  }
+
   async function handlePay(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -317,31 +342,26 @@ export default function SignupPage() {
     }
 
     const publicKey = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY?.trim()
-    setLoading(true)
-
-    if (isOneTime && (!publicKey || !window.FlutterwaveCheckout)) {
-      setError("Secure SIMA Abacus checkout is not available right now. Please try again later.")
+    const checkoutFn = window.FlutterwaveCheckout
+    if (!publicKey || !checkoutFn) {
+      setError(
+        scriptReady
+          ? "Secure checkout is not available right now. Please try again later."
+          : "Secure checkout is still loading. Wait a moment and try again.",
+      )
       setLoading(false)
       return
     }
 
-    if (isOneTime) {
-      try {
-        await prepareSimaAccount()
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "We couldn't prepare your SIMA account. Please try again.")
-        setLoading(false)
-        return
-      }
+    try {
+      await prepareAccount()
+    } catch (accountError) {
+      setError(accountError instanceof Error ? accountError.message : "We couldn't prepare your account. Please try again.")
+      setLoading(false)
+      return
     }
 
     const txRef = `sp-${form.productId}-${Date.now()}-${form.username.trim().toLowerCase()}`
-
-    // Other programs retain their existing demo behavior when Flutterwave is not configured.
-    if (!publicKey || !window.FlutterwaveCheckout) {
-      void verifyAndFinish(`demo-${txRef}`, txRef)
-      return
-    }
 
     let plan: { planId: number; amountNgn: number }
     try {
@@ -352,7 +372,8 @@ export default function SignupPage() {
       return
     }
 
-    window.FlutterwaveCheckout({
+    let verifying = false
+    checkoutFn({
       public_key: publicKey,
       tx_ref: txRef,
       amount: plan.amountNgn,
@@ -366,23 +387,28 @@ export default function SignupPage() {
       },
       customizations: {
         title: selectedProduct.name,
-        description: isOneTime
+        description: isSima
           ? `SIMA Abacus Basic 1 monthly subscription — ${formatNgn(plan.amountNgn)}/month`
-          : `${selectedProduct.name} tutoring monthly subscription — ${formatNgn(plan.amountNgn)}/month`,
+          : `${selectedProduct.name} monthly subscription — ${formatNgn(plan.amountNgn)}/month`,
       },
       callback: (response: { transaction_id?: string | number }) => {
+        verifying = true
         void verifyAndFinish(response.transaction_id ?? "", txRef)
       },
-      onclose: () => setLoading(false),
+      onclose: () => {
+        if (!verifying) setLoading(false)
+      },
     })
   }
+
+  const perks = form.productId === "sima-abacus" ? SIMA_PERKS : form.productId === "english" ? ENGLISH_PERKS : MATH_PERKS
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-background bg-dots text-foreground">
       <Script
         src="https://checkout.flutterwave.com/v3.js"
         strategy="afterInteractive"
-        onLoad={() => setScriptReady(true)}
+        onReady={() => setScriptReady(true)}
       />
       <FloatingShapes />
 
@@ -391,22 +417,9 @@ export default function SignupPage() {
           Create your account
         </h1>
         <p className="mx-auto mt-3 max-w-md text-base text-muted-foreground">
-          {isOneTime ? (
-            <>Create your account, then subscribe at {priceLabel}/month to unlock SIMA Abacus Basic 1. Billed monthly until you cancel.</>
-          ) : (
-            <>
-              Choose a program for the learner. {" "}
-              {earlyBird ? (
-                <>
-                  {selectedProduct.name} is <span className="font-sans font-bold text-foreground">{priceLabel}</span>{" "}/month during early bird.
-                </>
-              ) : (
-                <>
-                  {selectedProduct.name} is <span className="font-sans font-bold text-foreground">{priceLabel}</span>{" "}/month.
-                </>
-              )}
-            </>
-          )}
+          Create your account, then subscribe at{" "}
+          <span className="font-sans font-bold text-foreground">{priceLabel}</span>/month for{" "}
+          {selectedProduct.name}. Billed monthly until you cancel.
         </p>
 
         {earlyBird && (
@@ -429,7 +442,7 @@ export default function SignupPage() {
         )}
 
         <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-          {(isOneTime ? SIMA_PERKS : PERKS).map((perk) => (
+          {perks.map((perk) => (
             <li key={perk} className="flex items-center gap-2 text-sm font-medium text-foreground/85">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
                 <Check className="h-3.5 w-3.5" />
@@ -441,6 +454,31 @@ export default function SignupPage() {
       </div>
 
       <div className="relative z-10 mx-auto mt-8 w-full max-w-2xl rounded-t-[2.75rem] border-t-2 border-border bg-card px-6 pb-10 pt-8 text-card-foreground shadow-[0_-14px_50px_-20px_rgba(47,107,255,0.35)] sm:px-10">
+        {signedInEmail && (
+          <div role="status" className="mb-6 flex flex-col gap-3 rounded-2xl border-2 border-brand/20 bg-brand/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm">
+              <p className="font-bold text-foreground">Signed in as {signedInEmail}</p>
+              <p className="mt-0.5 text-muted-foreground">
+                You can subscribe to {selectedProduct.name} directly from your Learn dashboard, or sign out to create a separate learner account.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Link
+                href={`/learn?purchase=${form.productId}`}
+                className="inline-flex items-center justify-center rounded-full bg-brand px-4 py-2 font-display text-xs font-bold text-brand-foreground"
+              >
+                Go to Learn
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOutExisting}
+                className="inline-flex items-center justify-center rounded-full border border-border bg-card px-4 py-2 font-display text-xs font-bold text-foreground hover:bg-secondary"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
         <form onSubmit={handlePay} className="flex flex-col gap-7">
           <Section title="Choose your program" icon={<Sparkles className="h-4 w-4" />}>
             <SelectField
@@ -450,7 +488,7 @@ export default function SignupPage() {
                 if (isProgramId(value)) set("productId", value)
               }}
               placeholder="Select a program"
-              options={PROGRAMS.filter((program) => program.id !== "english").map((program) => ({ value: program.id, label: program.name }))}
+              options={PROGRAMS.map((program) => ({ value: program.id, label: program.name }))}
             />
             <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
           </Section>
@@ -597,7 +635,15 @@ export default function SignupPage() {
               className="mt-0.5 h-5 w-5 shrink-0 rounded-md border-2 border-border accent-brand"
             />
             <span>
-              I agree to the Terms of Service and Privacy Policy, and confirm the details above are correct.
+              I agree to the{" "}
+              <Link href="/terms" className="font-bold text-brand underline-offset-4 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="font-bold text-brand underline-offset-4 hover:underline">
+                Privacy Policy
+              </Link>
+              , and confirm the details above are correct.
             </span>
           </label>
 
@@ -608,22 +654,20 @@ export default function SignupPage() {
           <div className="border-t-2 border-border pt-5">
             <button
               type="submit"
-              disabled={loading || !scriptReady}
+              disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-sun px-6 py-4 font-display text-lg font-bold text-sun-foreground shadow-toy-sun transition-transform hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none disabled:opacity-70"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
-              {loading ? (isOneTime ? "Creating account & opening checkout…" : "Processing…") : isOneTime ? <>Create account &amp; subscribe · <span className="font-sans">{priceLabel}</span>/month</> : <>Subscribe · <span className="font-sans">{priceLabel}</span>/month for {selectedProduct.name}</>}
+              {loading ? "Creating account & opening checkout…" : <>Create account &amp; subscribe · <span className="font-sans">{priceLabel}</span>/month</>}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              {isOneTime
-                ? `Monthly recurring payment, charged automatically to your card each month until you cancel. Your account is created first, then secure checkout opens here. ${localCurrencyNotice}`
-                : `Monthly recurring payment, charged automatically to your card each month until you cancel. Secured by Flutterwave. ${isForeignCurrency ? localCurrencyNotice : ""}`}
+              Monthly recurring payment, charged automatically to your card each month until you cancel. Your account is created first, then secure checkout opens here via Flutterwave. {localCurrencyNotice}
             </p>
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href={isOneTime ? "/login?next=%2Flearn%3Fpurchase%3Dsima-abacus" : "/login"} className="font-display font-bold text-foreground hover:text-brand">
+            <Link href={`/login?next=${encodeURIComponent(`/learn?purchase=${form.productId}`)}`} className="font-display font-bold text-foreground hover:text-brand">
               Sign In
             </Link>
           </p>

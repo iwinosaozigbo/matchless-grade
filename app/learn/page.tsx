@@ -1,15 +1,13 @@
 import { redirect } from "next/navigation"
-import { BookOpenCheck, ChevronDown } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { LearnDashboard } from "@/components/learn/dashboard"
 import { LearnCourseOptions } from "@/components/learn/course-options"
-import { SimaCourseDashboard } from "@/components/sima/course-dashboard"
 import { getMathCourse, getMathLiveClassLinks } from "@/lib/math-lessons"
 import { getUnlockedMathStages } from "@/lib/course-access"
 import { createServiceClient } from "@/lib/supabase/server"
 import { getSimaMember, getSimaPurchase } from "@/lib/sima/server"
 import { isSimaAdminEmail } from "@/lib/sima/admin"
-import { getCurrentPriceForProgram, isEarlyBird } from "@/lib/program-pricing"
+import { getCurrentPriceForProgram, isEarlyBird, isProgramId } from "@/lib/program-pricing"
 
 export const metadata = {
   title: "My learning path | Matchless Grade",
@@ -20,11 +18,15 @@ export const metadata = {
 export default async function LearnPage({
   searchParams,
 }: {
-  searchParams: Promise<{ payment?: string | string[]; access?: string | string[] }>
+  searchParams: Promise<{ payment?: string | string[]; access?: string | string[]; purchase?: string | string[] }>
 }) {
   const params = await searchParams
   const member = await getSimaMember()
-  if (!member) redirect("/login?next=%2Flearn")
+  if (!member) {
+    const requestedPurchase = Array.isArray(params.purchase) ? params.purchase[0] : params.purchase
+    const nextUrl = isProgramId(requestedPurchase) ? `/learn?purchase=${requestedPurchase}` : "/learn"
+    redirect(`/login?next=${encodeURIComponent(nextUrl)}`)
+  }
 
   const isAdmin = isSimaAdminEmail(member.email)
   const [mathStages, simaPurchase] = await Promise.all([
@@ -61,7 +63,7 @@ export default async function LearnPage({
     simaLessons = (lessonRows ?? []).map((lesson) => ({
       ...lesson,
       title: /^Week \d+ · Lesson \d+$/.test(lesson.title) ? `Week ${lesson.week_number} · Lesson ${lesson.lesson_number}` : lesson.title,
-      unlocked: Date.parse(lesson.release_at) <= now,
+      unlocked: isAdmin || Date.parse(lesson.release_at) <= now,
     }))
     simaProgress = progressRows ?? []
   }
@@ -70,6 +72,8 @@ export default async function LearnPage({
   simaProgress = simaProgress.filter((item) => simaLessonIds.has(item.lesson_id))
   const simaXp = simaProgress.reduce((sum, item) => sum + item.xp_awarded, 0)
   const xp = simaXp + math.progress.reduce((sum, item) => sum + item.xp_awarded, 0)
+  const requestedPurchase = Array.isArray(params.purchase) ? params.purchase[0] : params.purchase
+  const openProgram = isProgramId(requestedPurchase) ? requestedPurchase : undefined
 
   return (
     <AppShell xp={xp} accountName={name}>
@@ -80,28 +84,19 @@ export default async function LearnPage({
       )}
       {params.access === "required" && (
         <p role="status" className="mb-6 rounded-2xl border border-sun/40 bg-sun/10 p-4 text-sm font-semibold">
-          That lesson requires a verified SIMA Abacus purchase. You can unlock it here.
+          That lesson requires an active course subscription. You can unlock it below.
         </p>
       )}
-      <LearnDashboard lessons={math.lessons} progress={math.progress} name={name} unlockedStages={mathStages} liveClassLinks={liveClassLinks} simaLessonCount={simaLessons.length} simaCompleted={simaProgress.filter((item) => item.completed_at).length} simaXp={simaXp} />
-      {hasSimaAccess && (
-        <details className="group/sima mt-4 rounded-[2rem] border-2 border-border bg-card p-5 shadow-toy sm:p-6">
-          <summary className="flex cursor-pointer list-none items-center gap-3 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-              <BookOpenCheck className="size-5" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-display text-lg font-bold">SIMA Abacus · Basic 1</span>
-              <span className="block text-sm text-muted-foreground">{simaLessons.length} lessons · your saved progress</span>
-            </span>
-            <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">Unlocked</span>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open/sima:rotate-180" aria-hidden="true" />
-          </summary>
-          <div className="mt-5 border-t border-border pt-5">
-            <SimaCourseDashboard lessons={simaLessons} progress={simaProgress} />
-          </div>
-        </details>
-      )}
+      <LearnDashboard
+        lessons={math.lessons}
+        progress={math.progress}
+        name={name}
+        unlockedStages={mathStages}
+        liveClassLinks={liveClassLinks}
+        hasSimaAccess={hasSimaAccess}
+        simaLessons={simaLessons}
+        simaProgress={simaProgress}
+      />
       <LearnCourseOptions
         email={member.email}
         unlockedMathStages={mathStages}
@@ -110,6 +105,7 @@ export default async function LearnPage({
         simaPriceNgn={getCurrentPriceForProgram("sima-abacus") ?? 30_000}
         englishPriceNgn={getCurrentPriceForProgram("english") ?? 25_000}
         isEarlyBird={isEarlyBird()}
+        openProgram={openProgram}
       />
     </AppShell>
   )

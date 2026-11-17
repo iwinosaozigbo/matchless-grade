@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
   // Referral codes are optional and must never block a verified payment.
   async function redeemIfProvided() {
-    if (isLearnPurchase || !referralCode || !payerEmail || typeof txRef !== "string") return
+    if (!referralCode || !payerEmail || typeof txRef !== "string") return
     try {
       await redeemReferralCode({ code: referralCode, email: payerEmail, productId: String(productId), txRef })
     } catch {}

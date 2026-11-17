@@ -6,7 +6,7 @@ import { FaqSection, FinalCta, SiteFooter } from "@/components/home/home-faq-cta
 export const metadata: Metadata = {
   title: "Pricing | MatchlessGrade",
   description:
-    "Simple monthly plans for the Mathematics bundle and SIMA Abacus. Billed monthly by card, cancel any time.",
+    "Simple monthly plans for the Mathematics bundle, English bundle, and SIMA Abacus. Billed monthly by card, cancel any time.",
   alternates: { canonical: "/pricing" },
 }
 

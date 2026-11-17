@@ -14,11 +14,11 @@ export type AdminAccount = {
   isAdmin: boolean
   courses: Record<CourseId, boolean>
   paidMathBundle: boolean
+  paidEnglishBundle: boolean
   paidSima: boolean
-  paidEnglishGrade2: boolean
-  paidEnglishBasic1: boolean
-  paidEnglishBasic23: boolean
 }
+
+const ENGLISH_ENROLLMENT_IDS = new Set(["english", "english-basic-1", "english-basic-2-3"])
 
 /** Recorded-lesson stages (Mathematics levels such as "Upper Basic", and English) the signed-in email may watch. */
 export async function getUnlockedMathStages(email: string): Promise<string[]> {
@@ -43,11 +43,10 @@ export async function getUnlockedMathStages(email: string): Promise<string[]> {
     .map((row) => row.course_id as LessonCourseId)
     .filter((id) => lessonCourseIds.includes(id))
   const paidPrograms = new Set((enrollments.data ?? []).map((row) => row.program_id))
+  const hasEnglishBundle = [...ENGLISH_ENROLLMENT_IDS].some((id) => paidPrograms.has(id))
   const paidCourseIds = [
     ...(paidPrograms.has("mathematics") ? MATH_COURSE_IDS : []),
-    ...(paidPrograms.has("english") ? ["english-grade-2" as const] : []),
-    ...(paidPrograms.has("english-basic-1") ? ["english-basic-1" as const] : []),
-    ...(paidPrograms.has("english-basic-2-3") ? ["english-basic-2-3" as const] : []),
+    ...(hasEnglishBundle ? ENGLISH_COURSE_IDS : []),
   ]
   return [...new Set([...paidCourseIds, ...granted])].map(stageForMathCourse)
 }
@@ -78,9 +77,7 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
     (row) => row.payment_status === "successful" && isPeriodActive(row.current_period_end),
   )
   const mathPaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "mathematics").map((r) => r.email))
-  const englishGrade2PaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "english").map((r) => r.email))
-  const englishBasic1PaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "english-basic-1").map((r) => r.email))
-  const englishBasic23PaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "english-basic-2-3").map((r) => r.email))
+  const englishPaidEmails = new Set(paidEnrollments.filter((r) => ENGLISH_ENROLLMENT_IDS.has(r.program_id)).map((r) => r.email))
   const simaEnrollEmails = new Set(paidEnrollments.filter((r) => r.program_id === "sima-abacus").map((r) => r.email))
 
   const accounts: AdminAccount[] = []
@@ -95,6 +92,7 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
       const paidSima = simaPaidUsers.has(user.id) || simaPaidEmails.has(email) || simaEnrollEmails.has(email)
       const override = overrideByEmail.get(email)
       const paidMathBundle = mathPaidEmails.has(email)
+      const paidEnglishBundle = englishPaidEmails.has(email)
       accounts.push({
         userId: user.id,
         email,
@@ -103,10 +101,8 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
         lastSignInAt: user.last_sign_in_at ?? null,
         isAdmin,
         paidMathBundle,
+        paidEnglishBundle,
         paidSima,
-        paidEnglishGrade2: englishGrade2PaidEmails.has(email),
-        paidEnglishBasic1: englishBasic1PaidEmails.has(email),
-        paidEnglishBasic23: englishBasic23PaidEmails.has(email),
         courses: {
           "sima-abacus": isAdmin || (override ?? paidSima),
           "math-nursery-2-basic-1": isAdmin || paidMathBundle || grantSet.has(`${email}|math-nursery-2-basic-1`),
@@ -114,10 +110,8 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
           "math-upper-basic": isAdmin || paidMathBundle || grantSet.has(`${email}|math-upper-basic`),
           "math-junior-secondary": isAdmin || paidMathBundle || grantSet.has(`${email}|math-junior-secondary`),
           "math-senior-secondary": isAdmin || paidMathBundle || grantSet.has(`${email}|math-senior-secondary`),
-          "english-grade-1": isAdmin || grantSet.has(`${email}|english-grade-1`),
-          "english-grade-2": isAdmin || englishGrade2PaidEmails.has(email) || grantSet.has(`${email}|english-grade-2`),
-          "english-basic-1": isAdmin || englishBasic1PaidEmails.has(email) || grantSet.has(`${email}|english-basic-1`),
-          "english-basic-2-3": isAdmin || englishBasic23PaidEmails.has(email) || grantSet.has(`${email}|english-basic-2-3`),
+          "english-grade-1": isAdmin || paidEnglishBundle || grantSet.has(`${email}|english-grade-1`),
+          "english-grade-2": isAdmin || paidEnglishBundle || grantSet.has(`${email}|english-grade-2`),
         },
       })
     }
