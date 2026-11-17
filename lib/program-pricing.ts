@@ -16,6 +16,20 @@ export const PROGRAMS = [
     launchPriceNgn: 25_000,
   },
   {
+    id: "english-basic-1",
+    name: "English · Basic 1",
+    description: "English classes for Basic 1 learners.",
+    earlyBirdPriceNgn: 20_000,
+    launchPriceNgn: 25_000,
+  },
+  {
+    id: "english-basic-2-3",
+    name: "English · Basic 2 & 3",
+    description: "English classes for Basic 2 and Basic 3 learners.",
+    earlyBirdPriceNgn: 20_000,
+    launchPriceNgn: 25_000,
+  },
+  {
     id: "sima-abacus",
     name: "SIMA Abacus",
     description: "SIMA Abacus learning programme.",

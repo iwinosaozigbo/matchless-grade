@@ -26,7 +26,7 @@ export function PricingSection() {
       </Reveal>
 
       <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {PROGRAMS.map((product, index) => {
+        {PROGRAMS.filter((product) => product.id !== "english-basic-1" && product.id !== "english-basic-2-3").map((product, index) => {
           const price = getProgramPriceNgn(product, now)
           return (
             <Reveal key={product.id} delay={index * 80}>

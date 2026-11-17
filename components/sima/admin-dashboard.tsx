@@ -314,7 +314,7 @@ export function SimaAdminDashboard({
             {activeTab === "timetable" && (
               <TimetableTab lessons={data.lessons} busyAction={busyAction} onSchedule={saveSchedule} onPublish={togglePublished} />
             )}
-            {activeTab === "accounts" && <AccountsTab accounts={accounts} />}
+            {activeTab === "accounts" && <AccountsTab accounts={accounts} adminEmail={adminEmail} />}
             {activeTab === "payments" && <PaymentsTab payments={data.payments} loadError={data.paymentsError} />}
             {activeTab === "referrals" && <ReferralsTab codes={referralCodes} />}
             {activeTab === "mathematics" && <MathBundleTab levels={mathLevels} />}

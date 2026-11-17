@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { getSimaAdminAccess } from "@/lib/sima/admin"
+import { getSimaAdminAccess, isSimaAdminEmail } from "@/lib/sima/admin"
 import { setCourseAccess } from "@/lib/course-access"
 import { COURSES, isCourseId } from "@/lib/course-catalog"
-import { createServiceClient } from "@/lib/supabase/server"
+import { createClient, createServiceClient } from "@/lib/supabase/server"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -46,6 +46,47 @@ export async function POST(request: NextRequest) {
 
   const body = await readJson(request)
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
+
+  if (body.action === "password-reset") {
+    const userId = typeof body.userId === "string" ? body.userId.trim() : ""
+    if (!/^[0-9a-f-]{36}$/i.test(userId)) {
+      return NextResponse.json({ error: "Choose a valid learner account." }, { status: 400 })
+    }
+
+    const service = createServiceClient()
+    const { data, error } = await service.auth.admin.getUserById(userId)
+    const targetEmail = data.user?.email?.trim().toLowerCase()
+    if (error || !data.user || !targetEmail) {
+      return NextResponse.json({ error: "The learner account could not be found." }, { status: 404 })
+    }
+    if (data.user.id === auth.actor.id || isSimaAdminEmail(targetEmail)) {
+      return NextResponse.json({ error: "Password recovery can only be sent for learner accounts." }, { status: 403 })
+    }
+
+    try {
+      const redirectTo = new URL(
+        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL?.trim() || new URL("/auth/callback", request.url).toString(),
+      )
+      redirectTo.searchParams.set("next", "/reset-password?next=%2Flearn")
+      const supabase = await createClient()
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+        redirectTo: redirectTo.toString(),
+      })
+      if (resetError) return NextResponse.json({ error: "Unable to send a password reset email right now." }, { status: 503 })
+    } catch {
+      return NextResponse.json({ error: "Unable to send a password reset email right now." }, { status: 503 })
+    }
+
+    await service.from("sima_abacus_admin_audit").insert({
+      actor_id: auth.actor.id,
+      target_user_id: data.user.id,
+      target_email: targetEmail,
+      action: "password_reset_requested",
+      reason: "Admin sent a secure password reset link to the learner.",
+      details: {},
+    })
+    return NextResponse.json({ ok: true })
+  }
 
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : ""
   const password = typeof body.password === "string" ? body.password : ""
@@ -109,5 +150,46 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update access." }, { status: 500 })
   }
+  return NextResponse.json({ ok: true })
+}
+
+export async function DELETE(request: NextRequest) {
+  const auth = await authorize(request)
+  if ("error" in auth) return auth.error
+
+  const body = await readJson(request)
+  if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
+
+  const userId = typeof body.userId === "string" ? body.userId.trim() : ""
+  const confirmationEmail = typeof body.confirmationEmail === "string" ? body.confirmationEmail.trim().toLowerCase() : ""
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) {
+    return NextResponse.json({ error: "Choose a valid learner account." }, { status: 400 })
+  }
+
+  const service = createServiceClient()
+  const { data, error } = await service.auth.admin.getUserById(userId)
+  const targetEmail = data.user?.email?.trim().toLowerCase()
+  if (error || !data.user || !targetEmail) {
+    return NextResponse.json({ error: "The learner account could not be found." }, { status: 404 })
+  }
+  if (confirmationEmail !== targetEmail) {
+    return NextResponse.json({ error: "The confirmation email does not match this account." }, { status: 400 })
+  }
+  if (data.user.id === auth.actor.id || isSimaAdminEmail(targetEmail)) {
+    return NextResponse.json({ error: "Administrator accounts cannot be deleted here." }, { status: 403 })
+  }
+
+  const { error: deleteError } = await service.auth.admin.deleteUser(data.user.id)
+  if (deleteError) return NextResponse.json({ error: "Could not delete the learner account." }, { status: 500 })
+
+  await service.from("sima_abacus_admin_audit").insert({
+    actor_id: auth.actor.id,
+    target_user_id: data.user.id,
+    target_email: targetEmail,
+    action: "account_deleted",
+    reason: "Admin deleted learner account as a duplicate.",
+    details: { authAccountDeleted: true, paymentRecordsPreserved: true },
+  })
+
   return NextResponse.json({ ok: true })
 }
