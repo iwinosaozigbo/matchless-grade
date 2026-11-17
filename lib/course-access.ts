@@ -15,6 +15,9 @@ export type AdminAccount = {
   courses: Record<CourseId, boolean>
   paidMathBundle: boolean
   paidSima: boolean
+  paidEnglishGrade2: boolean
+  paidEnglishBasic1: boolean
+  paidEnglishBasic23: boolean
 }
 
 /** Recorded-lesson stages (Mathematics levels such as "Upper Basic", and English) the signed-in email may watch. */
@@ -27,12 +30,11 @@ export async function getUnlockedMathStages(email: string): Promise<string[]> {
     service.from("course_access_grants").select("course_id").eq("email", normalized),
     service
       .from("program_enrollments")
-      .select("id")
+      .select("program_id")
       .eq("email", normalized)
-      .eq("program_id", "mathematics")
+      .in("program_id", ["mathematics", "english", "english-basic-1", "english-basic-2-3"])
       .eq("payment_status", "successful")
-      .or(activePeriodFilter())
-      .limit(1),
+      .or(activePeriodFilter()),
   ])
   if (grants.error || enrollments.error) throw new Error("Unable to check course access.")
 
@@ -40,8 +42,14 @@ export async function getUnlockedMathStages(email: string): Promise<string[]> {
   const granted = (grants.data ?? [])
     .map((row) => row.course_id as LessonCourseId)
     .filter((id) => lessonCourseIds.includes(id))
-  const ids = enrollments.data?.length ? [...MATH_COURSE_IDS, ...granted] : granted
-  return [...new Set(ids)].map(stageForMathCourse)
+  const paidPrograms = new Set((enrollments.data ?? []).map((row) => row.program_id))
+  const paidCourseIds = [
+    ...(paidPrograms.has("mathematics") ? MATH_COURSE_IDS : []),
+    ...(paidPrograms.has("english") ? ["english-grade-2" as const] : []),
+    ...(paidPrograms.has("english-basic-1") ? ["english-basic-1" as const] : []),
+    ...(paidPrograms.has("english-basic-2-3") ? ["english-basic-2-3" as const] : []),
+  ]
+  return [...new Set([...paidCourseIds, ...granted])].map(stageForMathCourse)
 }
 
 function displayName(metadata: Record<string, unknown> | undefined) {
@@ -70,6 +78,9 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
     (row) => row.payment_status === "successful" && isPeriodActive(row.current_period_end),
   )
   const mathPaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "mathematics").map((r) => r.email))
+  const englishGrade2PaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "english").map((r) => r.email))
+  const englishBasic1PaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "english-basic-1").map((r) => r.email))
+  const englishBasic23PaidEmails = new Set(paidEnrollments.filter((r) => r.program_id === "english-basic-2-3").map((r) => r.email))
   const simaEnrollEmails = new Set(paidEnrollments.filter((r) => r.program_id === "sima-abacus").map((r) => r.email))
 
   const accounts: AdminAccount[] = []
@@ -93,6 +104,9 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
         isAdmin,
         paidMathBundle,
         paidSima,
+        paidEnglishGrade2: englishGrade2PaidEmails.has(email),
+        paidEnglishBasic1: englishBasic1PaidEmails.has(email),
+        paidEnglishBasic23: englishBasic23PaidEmails.has(email),
         courses: {
           "sima-abacus": isAdmin || (override ?? paidSima),
           "math-nursery-2-basic-1": isAdmin || paidMathBundle || grantSet.has(`${email}|math-nursery-2-basic-1`),
@@ -101,6 +115,9 @@ export async function getAdminAccounts(): Promise<AdminAccount[]> {
           "math-junior-secondary": isAdmin || paidMathBundle || grantSet.has(`${email}|math-junior-secondary`),
           "math-senior-secondary": isAdmin || paidMathBundle || grantSet.has(`${email}|math-senior-secondary`),
           "english-grade-1": isAdmin || grantSet.has(`${email}|english-grade-1`),
+          "english-grade-2": isAdmin || englishGrade2PaidEmails.has(email) || grantSet.has(`${email}|english-grade-2`),
+          "english-basic-1": isAdmin || englishBasic1PaidEmails.has(email) || grantSet.has(`${email}|english-basic-1`),
+          "english-basic-2-3": isAdmin || englishBasic23PaidEmails.has(email) || grantSet.has(`${email}|english-basic-2-3`),
         },
       })
     }

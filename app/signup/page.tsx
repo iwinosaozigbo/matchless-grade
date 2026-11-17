@@ -108,7 +108,9 @@ export default function SignupPage() {
     const params = new URLSearchParams(window.location.search)
     const requestedProduct = params.get("product")
     const requestedReferral = params.get("ref")?.trim().toUpperCase().slice(0, 32) ?? ""
-    if (isProgramId(requestedProduct)) {
+    if (requestedProduct === "english") {
+      router.replace("/login?next=%2Flearn")
+    } else if (isProgramId(requestedProduct)) {
       setForm((current) => ({ ...current, productId: requestedProduct }))
     }
     if (requestedReferral) {
@@ -448,7 +450,7 @@ export default function SignupPage() {
                 if (isProgramId(value)) set("productId", value)
               }}
               placeholder="Select a program"
-              options={PROGRAMS.map((program) => ({ value: program.id, label: program.name }))}
+              options={PROGRAMS.filter((program) => program.id !== "english").map((program) => ({ value: program.id, label: program.name }))}
             />
             <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
           </Section>

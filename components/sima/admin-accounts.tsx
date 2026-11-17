@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
-import { Search, UserPlus } from "lucide-react"
+import { Mail, RotateCcw, Search, Trash2, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { COURSES } from "@/lib/course-catalog"
 import type { AdminAccount } from "@/lib/course-access"
@@ -10,7 +10,7 @@ import type { AdminAccount } from "@/lib/course-access"
 const inputClass =
   "h-10 min-w-0 rounded-xl border border-white/10 bg-[#0d1119] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-violet-300/60 focus:ring-2 focus:ring-violet-300/15"
 
-async function send(method: "POST" | "PATCH", payload: Record<string, unknown>) {
+async function send(method: "POST" | "PATCH" | "DELETE", payload: Record<string, unknown>) {
   const response = await fetch("/api/admin/accounts", {
     method,
     headers: { "Content-Type": "application/json" },
@@ -28,7 +28,7 @@ function formatDate(value: string | null) {
     : new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(date)
 }
 
-export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
+export function AccountsTab({ accounts, adminEmail }: { accounts: AdminAccount[]; adminEmail: string }) {
   const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -43,7 +43,7 @@ export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
     return accounts.filter((a) => a.email.includes(q) || a.name?.toLowerCase().includes(q))
   }, [accounts, query])
 
-  async function run(key: string, method: "POST" | "PATCH", payload: Record<string, unknown>, success: string) {
+  async function run(key: string, method: "POST" | "PATCH" | "DELETE", payload: Record<string, unknown>, success: string) {
     setBusy(key)
     setMessage(null)
     try {
@@ -70,6 +70,28 @@ export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
     }
   }
 
+  async function sendPasswordReset(account: AdminAccount) {
+    await run(
+      `reset:${account.userId}`,
+      "POST",
+      { action: "password-reset", userId: account.userId },
+      `A secure password reset email was sent to ${account.email}.`,
+    )
+  }
+
+  async function deleteAccount(account: AdminAccount) {
+    const confirmationEmail = window.prompt(
+      `This permanently deletes the learner login for ${account.email}. Payment records are retained, and active subscriptions are not canceled. Type the account email to confirm:`,
+    )
+    if (confirmationEmail?.trim().toLowerCase() !== account.email) return
+
+    await run(
+      `delete:${account.userId}`,
+      "DELETE",
+      { userId: account.userId, confirmationEmail },
+      `The learner login for ${account.email} was deleted. Payment records were retained.`,
+    )
+  }
 
   return (
     <>
@@ -129,7 +151,7 @@ export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
           </label>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[1160px] text-left text-sm">
             <thead className="bg-white/[0.02] text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-5 py-3 font-semibold">Account</th>
@@ -139,6 +161,7 @@ export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
                     {course.group === "Mathematics" ? `Maths · ${course.name}` : course.name}
                   </th>
                 ))}
+                <th className="px-4 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
@@ -154,16 +177,21 @@ export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
                   </td>
                   {COURSES.map((course) => {
                     const granted = account.courses[course.id]
-                    const locked =
-                      account.isAdmin || (course.group === "Mathematics" && account.paidMathBundle)
+                    const paidEnglish =
+                      (course.id === "english-grade-2" && account.paidEnglishGrade2) ||
+                      (course.id === "english-basic-1" && account.paidEnglishBasic1) ||
+                      (course.id === "english-basic-2-3" && account.paidEnglishBasic23)
+                    const locked = account.isAdmin || (course.group === "Mathematics" && account.paidMathBundle) || paidEnglish
                     const key = `${account.email}:${course.id}`
                     const note = account.isAdmin
                       ? "Admin"
-                      : locked
-                        ? "Paid maths bundle"
-                        : course.id === "sima-abacus" && account.paidSima
-                          ? "Paid"
-                          : null
+                      : paidEnglish
+                        ? "Paid English plan"
+                        : course.group === "Mathematics" && account.paidMathBundle
+                          ? "Paid maths bundle"
+                          : course.id === "sima-abacus" && account.paidSima
+                            ? "Paid"
+                            : null
                     return (
                       <td key={course.id} className="px-4 py-4">
                         <button
@@ -187,11 +215,43 @@ export function AccountsTab({ accounts }: { accounts: AdminAccount[] }) {
                       </td>
                     )
                   })}
+                  <td className="px-4 py-4">
+                    {account.isAdmin || account.email === adminEmail.trim().toLowerCase() ? (
+                      <span className="text-xs text-slate-500">Protected admin</span>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={Boolean(busy)}
+                          onClick={() => void sendPasswordReset(account)}
+                          aria-label={`Send password reset email to ${account.email}`}
+                          className="h-8 justify-start rounded-lg border-violet-300/20 bg-transparent px-2 text-xs text-violet-200 hover:bg-violet-300/10 hover:text-white"
+                        >
+                          {busy === `reset:${account.userId}` ? <RotateCcw data-icon="inline-start" className="animate-spin" /> : <Mail data-icon="inline-start" />}
+                          {busy === `reset:${account.userId}` ? "Sending…" : "Send reset email"}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={Boolean(busy)}
+                          onClick={() => void deleteAccount(account)}
+                          aria-label={`Delete account for ${account.email}`}
+                          className="h-8 justify-start rounded-lg px-2 text-xs text-rose-300 hover:bg-rose-400/10 hover:text-rose-200"
+                        >
+                          {busy === `delete:${account.userId}` ? <RotateCcw data-icon="inline-start" className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                          {busy === `delete:${account.userId}` ? "Deleting…" : "Delete account"}
+                        </Button>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={COURSES.length + 2} className="px-5 py-12 text-center text-sm text-slate-500">
+                  <td colSpan={COURSES.length + 3} className="px-5 py-12 text-center text-sm text-slate-500">
                     {query ? "No accounts match that search." : "No accounts yet. Create one above."}
                   </td>
                 </tr>

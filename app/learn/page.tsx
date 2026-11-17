@@ -13,7 +13,7 @@ import { getCurrentPriceForProgram, isEarlyBird } from "@/lib/program-pricing"
 
 export const metadata = {
   title: "My learning path | Matchless Grade",
-  description: "Your weekly Mathematics and SIMA Abacus video lessons, live classes, practice quizzes and saved progress.",
+  description: "Your weekly Mathematics, English and SIMA Abacus video lessons, live classes, practice quizzes and saved progress.",
   robots: { index: false, follow: false },
 }
 
@@ -83,7 +83,7 @@ export default async function LearnPage({
           That lesson requires a verified SIMA Abacus purchase. You can unlock it here.
         </p>
       )}
-      <LearnDashboard lessons={math.lessons} progress={math.progress} name={name} liveClassLinks={liveClassLinks} simaLessonCount={simaLessons.length} simaCompleted={simaProgress.filter((item) => item.completed_at).length} simaXp={simaXp} />
+      <LearnDashboard lessons={math.lessons} progress={math.progress} name={name} unlockedStages={mathStages} liveClassLinks={liveClassLinks} simaLessonCount={simaLessons.length} simaCompleted={simaProgress.filter((item) => item.completed_at).length} simaXp={simaXp} />
       {hasSimaAccess && (
         <details className="group/sima mt-4 rounded-[2rem] border-2 border-border bg-card p-5 shadow-toy sm:p-6">
           <summary className="flex cursor-pointer list-none items-center gap-3 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
@@ -108,6 +108,7 @@ export default async function LearnPage({
         hasSimaAccess={hasSimaAccess}
         mathPriceNgn={getCurrentPriceForProgram("mathematics") ?? 25_000}
         simaPriceNgn={getCurrentPriceForProgram("sima-abacus") ?? 30_000}
+        englishPriceNgn={getCurrentPriceForProgram("english") ?? 25_000}
         isEarlyBird={isEarlyBird()}
       />
     </AppShell>

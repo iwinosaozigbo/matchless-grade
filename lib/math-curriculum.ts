@@ -221,4 +221,31 @@ export const ENGLISH_LEVELS: MathLevel[] = [
       "Pronouns",
     ],
   },
+  {
+    id: "grade-2-english",
+    stage: "Grade 2 English",
+    grades: "Grade 2 · 2nd Term",
+    tagline: "Build confident reading and grammar with six short, focused lessons.",
+    color: "brand",
+    subject: "english",
+    playlist: {
+      href: "https://www.youtube.com/playlist?list=PLYL3NbMTfvyc",
+      videos: [
+        { id: "jOAZvj-TxR4", title: "Grade 2 Lesson 1 Possessive Pronouns" },
+        { id: "vzNi9R9HzRI", title: "Grade 2 Lesson 2 Synonyms" },
+        { id: "avxmCG08ynE", title: "Grade 2 Lesson 3 Gender Words" },
+        { id: "kw-I6ojEF9k", title: "Grade 2 Lesson 4 Tion Ending Sound" },
+        { id: "3uSFpYp5oAE", title: "Grade 2 Lesson 5 Reflexive Pronouns" },
+        { id: "LtZ7_P1B6tw", title: "Grade 2 Lesson 6 Use of Do and Does" },
+      ],
+    },
+    topics: [
+      "Possessive pronouns",
+      "Synonyms",
+      "Gender words",
+      "The tion ending sound",
+      "Reflexive pronouns",
+      "Using do and does",
+    ],
+  },
 ]

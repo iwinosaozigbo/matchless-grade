@@ -15,17 +15,24 @@ function safeNextPath(value: string | null) {
 export async function GET(request: NextRequest) {
   const { origin, searchParams } = request.nextUrl
   const code = searchParams.get("code")
-  const nextPath = safeNextPath(searchParams.get("next"))
+  const requestedNext = searchParams.get("next")
+  const nextPath = safeNextPath(requestedNext)
+  const isPasswordRecovery =
+    requestedNext === "/reset-password?next=/admin" ||
+    requestedNext === "/reset-password?next=%2Fadmin" ||
+    requestedNext === "/reset-password?next=/learn" ||
+    requestedNext === "/reset-password?next=%2Flearn"
+  const failurePath = isPasswordRecovery ? "/reset-password?error=expired" : "/login"
 
   if (!code) {
-    return NextResponse.redirect(new URL("/login", origin))
+    return NextResponse.redirect(new URL(failurePath, origin))
   }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(new URL("/login", origin))
+    return NextResponse.redirect(new URL(failurePath, origin))
   }
 
   return NextResponse.redirect(new URL(nextPath, origin))

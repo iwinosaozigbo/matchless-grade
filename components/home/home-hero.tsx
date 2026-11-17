@@ -11,11 +11,11 @@ export function HomeHero() {
       <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
         <div>
           <h1 className="text-balance font-display text-4xl font-bold leading-[1.02] sm:text-6xl">
-            Maths your child will actually want to <span className="text-brand">practise.</span>
+            Maths and English your child will actually want to <span className="text-brand">practise.</span>
           </h1>
           <p className="mt-5 max-w-xl text-pretty text-lg text-muted-foreground">
             Short video lessons, instant practice and rewards that keep pupils and students coming back, every day.
-            Built for the Nigerian curriculum, BECE and WAEC.
+            Built for the Nigerian curriculum, including BECE, WAEC and primary English.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <PillLink href={FREE_TEST_HREF} variant="sun" size="lg" className="whitespace-nowrap">

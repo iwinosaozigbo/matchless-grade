@@ -22,7 +22,7 @@ export const RESULTS: ResultsStrip | null = null
 export const FAQS = [
   {
     q: "Which classes do you cover?",
-    a: "Nursery 2 to SSS3 mathematics, plus SIMA Abacus for younger learners.",
+    a: "Nursery 2 to SSS3 mathematics, English classes for Basic 1 and Basic 2–3, Grade 2 English, and SIMA Abacus.",
   },
   {
     q: "Does it work on a phone?",
@@ -34,6 +34,6 @@ export const FAQS = [
   },
   {
     q: "Is it aligned with the school curriculum?",
-    a: "Yes. Lessons follow the Nigerian national curriculum and BECE and WAEC syllabuses.",
+    a: "Yes. Mathematics lessons follow the Nigerian national curriculum and BECE and WAEC syllabuses. Primary English lessons support classroom reading and grammar.",
   },
 ] as const

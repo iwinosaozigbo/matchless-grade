@@ -6,17 +6,21 @@ import { CourseSchedule } from "@/components/learn/course-schedule"
 import type { MathCourseLesson, MathLiveClassLink } from "@/lib/math-lessons"
 import type { SimaCourseProgress } from "@/components/sima/course-dashboard"
 
-export function LearnDashboard({ lessons, progress, name, liveClassLinks = [], simaCompleted = 0, simaLessonCount = 0, simaXp = 0 }: {
+export function LearnDashboard({ lessons, progress, name, unlockedStages = [], liveClassLinks = [], simaCompleted = 0, simaLessonCount = 0, simaXp = 0 }: {
   lessons: MathCourseLesson[]
   progress: SimaCourseProgress[]
   name: string
+  unlockedStages?: string[]
   liveClassLinks?: MathLiveClassLink[]
   simaCompleted?: number
   simaLessonCount?: number
   simaXp?: number
 }) {
   const stages = ["Nursery 2 & Basic 1", "Basic 2-3", "Upper Basic", "Junior Secondary", "Senior Secondary"].filter((stage) => lessons.some((lesson) => lesson.stage === stage))
-  const englishStages = ["Grade 1 English"].filter((stage) => lessons.some((lesson) => lesson.stage === stage))
+  const englishStages = [...new Set([
+    ...lessons.filter((lesson) => lesson.stage.endsWith("English")).map((lesson) => lesson.stage),
+    ...unlockedStages.filter((stage) => stage.endsWith("English")),
+  ])]
   const done = progress.filter((item) => item.completed_at).length + simaCompleted
   const xp = progress.reduce((sum, item) => sum + item.xp_awarded, 0) + simaXp
 
@@ -59,7 +63,7 @@ export function LearnDashboard({ lessons, progress, name, liveClassLinks = [], s
             {englishStages.length > 0 && (
               <CourseDrawer
                 title="English"
-                description="Sounds, words and grammar"
+                description="Basic 1, Basic 2 & 3, and Grade 1–2 reading and grammar"
                 icon={<span className="flex size-11 items-center justify-center rounded-2xl bg-brand/10 text-brand"><BookOpen className="size-5" aria-hidden="true" /></span>}
                 stages={englishStages}
                 lessons={lessons}

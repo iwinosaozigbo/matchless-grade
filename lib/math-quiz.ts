@@ -83,6 +83,36 @@ const PRACTICE: Record<string, Practice[]> = {
     ["Fill the gap: Ada is kind. ___ helps her mother.", ["He", "She", "It", "They"], 1, "Ada is a girl, so we use she."],
     ["Which pronoun can replace \"the boys\"?", ["He", "She", "They", "It"], 2, "They is used for more than one person."],
   ],
+  possessive: [
+    ["Which word is a possessive pronoun?", ["Mine", "Run", "Happy", "School"], 0, "Mine shows that something belongs to the speaker."],
+    ["Choose the correct word: This book belongs to Ada. It is ___.", ["hers", "her", "she", "them"], 0, "Hers is a possessive pronoun that shows ownership."],
+    ["Which sentence uses a possessive pronoun?", ["They are playing.", "The red bag is theirs.", "We saw a bird.", "He runs fast."], 1, "Theirs shows who owns the red bag."],
+  ],
+  synonyms: [
+    ["Which word means nearly the same as \"happy\"?", ["Glad", "Angry", "Sleepy", "Tiny"], 0, "Glad and happy have similar meanings."],
+    ["Choose a synonym for \"quick\".", ["Fast", "Slow", "Late", "Soft"], 0, "Fast and quick have similar meanings."],
+    ["Which word is a synonym for \"begin\"?", ["Start", "Finish", "Stop", "Close"], 0, "Begin and start have similar meanings."],
+  ],
+  gender: [
+    ["What is the feminine word for \"king\"?", ["Prince", "Queen", "Man", "Father"], 1, "Queen is the feminine form of king."],
+    ["What is the masculine word for \"aunt\"?", ["Uncle", "Sister", "Mother", "Niece"], 0, "Uncle is the masculine form of aunt."],
+    ["Which pair shows a feminine and masculine word?", ["Queen and king", "Boy and son", "Father and man", "Girl and sister"], 0, "Queen is feminine and king is masculine."],
+  ],
+  tion: [
+    ["In the word \"station\", what sound does the ending \"tion\" make?", ["shun", "tah", "tion", "sun"], 0, "The ending tion is commonly pronounced \"shun\"."],
+    ["Which word ends with the \"tion\" sound?", ["Action", "Apple", "River", "Basket"], 0, "Action ends with the tion sound."],
+    ["Choose the word with the same ending sound as \"station\".", ["Nation", "Table", "Pencil", "Morning"], 0, "Nation and station both end with the \"shun\" sound."],
+  ],
+  reflexive: [
+    ["Which is a reflexive pronoun?", ["Herself", "Her", "She", "Their"], 0, "Herself is a reflexive pronoun."],
+    ["Choose the correct word: I made the card by ___.", ["myself", "me", "mine", "I"], 0, "Myself refers back to the subject I."],
+    ["Which sentence uses a reflexive pronoun?", ["They saw us.", "He taught himself to draw.", "She is happy.", "We ran home."], 1, "Himself refers back to the subject he."],
+  ],
+  dodoes: [
+    ["Choose the correct word: ___ you like stories?", ["Do", "Does", "Is", "Has"], 0, "Use do with you."],
+    ["Choose the correct word: ___ she read every day?", ["Do", "Does", "Are", "Have"], 1, "Use does with she."],
+    ["Which sentence is correct?", ["He do his work.", "They does play.", "We do our best.", "It do rain."], 2, "Use do with we."],
+  ],
   rates: [
     ["A car travels 120 km in 2 hours. What is its average speed?", ["30 km per hour", "60 km per hour", "120 km per hour", "240 km per hour"], 1, "Divide distance by time: 120 divided by 2 is 60."],
     ["Three notebooks cost 600. What is the cost of one notebook?", ["100", "150", "200", "300"], 2, "Divide the total cost by the number of notebooks."],
@@ -182,6 +212,12 @@ const PRACTICE: Record<string, Practice[]> = {
 
 export function getMathQuiz(title: string, lessonId: string): SimaQuizQuestion[] {
   const topic = /names\s*&\s*sounds/i.test(title) ? "lettersounds"
+    : /possessive|possesive/i.test(title) ? "possessive"
+    : /reflexive/i.test(title) ? "reflexive"
+    : /synonym/i.test(title) ? "synonyms"
+    : /gender/i.test(title) ? "gender"
+    : /tion/i.test(title) ? "tion"
+    : /\bdo\b.*\bdoes\b|\bdoes\b.*\bdo\b/i.test(title) ? "dodoes"
     : /consonant|vowel/i.test(title) ? "vowels"
     : /"a"\s*or\s*"an"|\ba\b.*\bor\b.*\ban\b/i.test(title) ? "aan"
     : /magical/i.test(title) ? "magice"

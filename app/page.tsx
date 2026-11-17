@@ -4,6 +4,7 @@ import { PricingSection } from "@/components/landing/pricing-section"
 import { HomeHero } from "@/components/home/home-hero"
 import {
   HowItWorksSection,
+  EnglishClassesSection,
   ParentsSection,
   PartnersSection,
   ProblemSection,
@@ -15,9 +16,9 @@ import { WhatsAppButton } from "@/components/home/whatsapp-button"
 import { FAQS } from "@/lib/home-content"
 import { SITE_NAME, SITE_URL, WHATSAPP_NUMBER } from "@/lib/site-config"
 
-const TITLE = "MatchlessGrade – Make Maths Your Child's Best Subject"
+const TITLE = "MatchlessGrade – Maths and English Lessons for Children"
 const DESCRIPTION =
-  "Game-based maths lessons from Nursery to SSS3 in Nigeria, plus SIMA Abacus mental maths. Take the free maths level test today."
+  "Game-based maths from Nursery to SSS3, English classes for Basic 1 and Basic 2–3, Grade 2 English, and SIMA Abacus. Take the free maths level test today."
 const SOCIAL_TITLE = "Is your child really on track in maths? Find out free."
 const SOCIAL_DESCRIPTION =
   "A 15-minute maths test. Get a free report on your child's level and weak topics."
@@ -84,6 +85,7 @@ export default function HomePage() {
         <ProblemSection />
         <HowItWorksSection />
         <ProgrammesSection />
+        <EnglishClassesSection />
         <ParentsSection />
         <ProofSection />
         <PricingSection />
