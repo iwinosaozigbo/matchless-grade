@@ -28,10 +28,16 @@ async function fetchSimaPrice(url: string): Promise<LocalizedSimaPriceData> {
   return response.json() as Promise<LocalizedSimaPriceData>
 }
 
-const PERKS = [
-  "Every subject, every lesson unlocked",
-  "Quizzes, flashcards & XP progress",
-  "Badges, streaks and the leaderboard",
+const MATH_PERKS = [
+  "All Mathematics levels (Nursery 2 – SSS3)",
+  "Weekly recorded lessons & live Q&A",
+  "Quizzes, XP & saved progress",
+]
+
+const ENGLISH_PERKS = [
+  "Grade 1 & Grade 2 Primary English",
+  "Phonics, reading & grammar lessons",
+  "Practice quizzes, XP & saved progress",
 ]
 
 const SIMA_PERKS = [
